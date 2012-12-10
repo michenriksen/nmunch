@@ -1,0 +1,75 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'methadone'
+require 'pcap'
+require 'paint'
+require 'ipaddr'
+require 'nmunch'
+
+class App
+  include Methadone::Main
+  include Methadone::CLILogging
+
+  main do
+    begin
+      if !options[:interface] && !options[:file]
+        help_now!("You must specify an interface or a PCAP file.")
+      end
+
+      logger.debug("Command-line options: #{options.inspect}")
+
+      logger.debug("Setting up report")
+      report = Nmunch::Report.new(options)
+
+      logger.debug("Registering STDOUT node subscriber")
+      report.register_subscriber(Nmunch::Subscribers::Stdout.new(options))
+
+      # Disable output coloring if specified in options
+      if options.include?('no-color')
+        logger.debug("Disabling output coloring")
+        Paint.mode = 0
+      end
+
+      if !options.include?('no-banner')
+        puts Paint[Nmunch.banner, :blue]
+        puts Paint[" Munching on packets om nom nom nom...\n", :blue]
+      end
+
+      # Start munching packets and find live nodes...
+      logger.debug("Munching packets now...")
+      Nmunch.munch!(options) do |node|
+        logger.debug("Found node: #{node.ip_address} (#{node.mac_address})")
+        report.publish_node(node)
+      end
+
+      logger.debug("Done, printing summary")
+      puts "\n#{report.summary}"
+
+    rescue Exception => e
+      if !e.is_a?(Interrupt)
+        logger.debug("Caught exception!")
+        logger.debug(e.inspect)
+        puts Paint[" Warp Core Breach!", :red]
+        puts Paint[" [#{e.class}] #{e.message}", :red]
+      else
+        logger.debug("Caught interrupt")
+        puts "\n#{report.summary}"
+        exit!
+      end
+    end
+  end
+
+  on("-i INTERFACE", "--interface", "Interface to munch packets on")
+  on("-f FILE", "--file",           "Path to PCAP file to analyze")
+  on("--no-prefix-lookup",          "Disable MAC prefix lookups")
+  on("--no-banner",                 "Don't display awesome Nmunch banner")
+  on("--no-color",                  "Don't colorize output")
+
+  description "A passive network discovery tool."
+  version Nmunch::VERSION
+
+  use_log_level_option
+
+  go!
+end

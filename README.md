@@ -10,6 +10,11 @@ with the [ruby-pcap gem][ruby-pcap], but it turned out to be quite useful and th
 architecture is flexible enough to extend the tool to do pretty much anything
 with a discovered node.
 
+## Requirements
+
+ - Ruby 1.9
+ - libpcap (<http://www.tcpdump.org/>)
+
 ## Installation
 
     gem install nmunch

@@ -16,6 +16,8 @@ with a discovered node.
 
 ## Usage
 
+![Nmunch munching](https://dl.dropbox.com/u/70881769/nmunch.png "Nmunch munching packets on a network")
+
 Nmunch is pretty straight-forward and supports two different methods:
 
 ### Listen on a network device
